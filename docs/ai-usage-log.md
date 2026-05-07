@@ -4,7 +4,7 @@
 Book Sharing Platform
 
 ## AI Tool Used
-- OpenAI Codex / ChatGPT for code assistance, debugging help, refactoring support, documentation guidance, and validation improvements.
+- Cursor / Copilot for code assistance, debugging help, refactoring support, documentation guidance, and validation improvements.
 
 ## Purpose of AI Usage
 AI was used to assist in:
@@ -79,15 +79,9 @@ Make the help page easier for first-time users.
 - suggested a more detailed onboarding-style help page
 - added step-by-step usage guidance and quick-start notes
 
-### 9. Documentation Guidance
-**Task**
-Prepare assignment submission documentation.
-
 **How AI Helped**
 - suggested structure for API documentation
 - suggested architecture documentation sections
-- suggested AI usage log format
-- suggested Git commit plan for better submission quality
 
 ## Example Prompts Used
 - "Whenever user clicks on borrow book it should be visible in the user profile section and with every book there should be a read option."
@@ -96,7 +90,6 @@ Prepare assignment submission documentation.
 - "Make the help section more detailed so it becomes easy for anyone to use the app."
 - "If a book title is already added and another person tries to add it, it should throw an error."
 - "While registering, make proper checks that user is entering email in proper format."
-- "Tell me step by step commit flow and repository setup for this project."
 
 ## What Was Done Manually
 The following parts still required manual understanding and review:
@@ -105,7 +98,7 @@ The following parts still required manual understanding and review:
 - reviewing the generated code changes
 - deciding final feature scope
 - understanding how frontend and backend connect
-- organizing the commit plan and documentation
+- Documentation
 
 ## Benefits of Using AI
 - faster feature development
