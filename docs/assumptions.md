@@ -36,12 +36,3 @@
 - documentation should reflect the exact local run pattern: `node server.js` for backend and `npm start` for frontend
 - the docs should explain both the user flow and the technical structure for assignment or review purposes
 
-## Out-of-Scope Items for the Current Version
-
-- social sharing features beyond borrowing and returning
-- payment flows or fines
-- notifications and reminders
-- file uploads for book cover storage
-- advanced admin moderation workflows
-- automated testing coverage
-- deployment configuration for production hosting
