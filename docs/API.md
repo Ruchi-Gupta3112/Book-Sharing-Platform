@@ -1,39 +1,44 @@
-# API Documentation
+﻿# API Documentation
 
 ## Base URL
+
+```text
 http://localhost:5000/api
+```
 
 ## Overview
-This project uses a Node.js + Express backend with MongoDB for storing users, books, and borrow records.
 
-The main API groups are:
-- users for authentication and profile-related data
-- books for viewing and adding books
-- borrow for borrowing and returning books
+The backend exposes three route groups:
 
-## 1. User APIs
+- `users` for registration, login, borrowed books, and profile data
+- `books` for listing and creating books
+- `borrow` for borrowing and returning books
 
-### 1.1 Register User
-**Endpoint**
-POST /api/users/register
+The API returns JSON responses and uses MongoDB through Mongoose models.
 
-**Description**
+## User Endpoints
+
+### `POST /api/users/register`
 Creates a new user account.
 
-**Request Body**
+#### Request body
+```json
 {
   "name": "Rahul Gupta",
   "email": "rahul@example.com",
   "password": "mypassword123"
 }
+```
 
-**Validation**
-- name is required
-- email must be in valid format
-- password is required
-- duplicate email is not allowed
+#### Validation
+- `name` is required by the user model
+- `email` must be present and match a valid email pattern
+- email is normalized to lowercase and trimmed
+- duplicate email addresses are rejected
+- `password` is hashed with bcrypt before storage
 
-**Success Response**
+#### Success response
+```json
 {
   "message": "User registered successfully",
   "user": {
@@ -43,21 +48,27 @@ Creates a new user account.
     "role": "user"
   }
 }
+```
 
-### 1.2 Login User
-**Endpoint**
-POST /api/users/login
+### `POST /api/users/login`
+Authenticates a user and returns a JWT token plus user details.
 
-**Description**
-Authenticates a user and returns a token.
-
-**Request Body**
+#### Request body
+```json
 {
   "email": "rahul@example.com",
   "password": "mypassword123"
 }
+```
 
-**Success Response**
+#### Behavior
+- email is normalized to lowercase and trimmed
+- the user is searched by normalized email
+- password is checked with bcrypt
+- a token is created with user id, email, and role
+
+#### Success response
+```json
 {
   "message": "Login successful",
   "token": "jwt_token_here",
@@ -68,93 +79,136 @@ Authenticates a user and returns a token.
     "role": "user"
   }
 }
+```
 
-### 1.3 Get Borrowed Books for a User
-**Endpoint**
-GET /api/users/:userId/borrowed
+### `GET /api/users/:userId/borrowed`
+Returns the currently borrowed books for a user, excluding returned records.
 
-**Description**
-Returns the list of currently borrowed books for a given user.
+#### Response notes
+- results are sorted by latest borrow date first
+- `bookId` is populated with book details
 
-### 1.4 Get User Profile Data
-**Endpoint**
-GET /api/users/:userId/profile
+### `GET /api/users/:userId/profile`
+Returns a richer profile payload for the given user.
 
-**Description**
-Returns user details, borrowed books, and profile statistics.
+#### Response shape
+```json
+{
+  "user": {
+    "name": "Rahul Gupta",
+    "email": "rahul@example.com",
+    "role": "user",
+    "createdAt": "2026-05-07T12:00:00.000Z"
+  },
+  "borrowedBooks": [],
+  "stats": {
+    "activeBorrows": 0,
+    "currentlyReading": 0,
+    "overdue": 0
+  }
+}
+```
 
-## 2. Book APIs
+## Book Endpoints
 
-### 2.1 Get All Books
-**Endpoint**
-GET /api/books
+### `GET /api/books`
+Returns all books sorted by newest first.
 
-**Description**
-Returns all books in the platform.
-
-### 2.2 Add a New Book
-**Endpoint**
-POST /api/books
-
-**Description**
+### `POST /api/books`
 Adds a new book to the shared library.
 
-**Validation**
-- title is required
-- duplicate book titles are not allowed
-- title comparison is case-insensitive
+#### Example request body
+```json
+{
+  "title": "Atomic Habits",
+  "author": "James Clear",
+  "genre": "Self Help",
+  "description": "A practical guide to building better habits.",
+  "ownerName": "Community Shelf",
+  "language": "English",
+  "pageCount": 320,
+  "publishedYear": 2018,
+  "readUrl": "",
+  "readContent": "Sample chapter text"
+}
+```
 
-## 3. Borrow APIs
+#### Validation
+- `title` is required
+- the title is trimmed before saving
+- duplicate titles are blocked with a case-insensitive exact-match check
 
-### 3.1 Borrow a Book
-**Endpoint**
-POST /api/borrow/:bookId
+## Borrow Endpoints
 
-**Description**
-Allows a user to borrow a book if it is available.
+### `POST /api/borrow/:bookId`
+Borrows an available book for a user.
 
-**Request Body**
+#### Request body
+```json
 {
   "userId": "6635b8c1234567890abcd111",
   "returnDate": "2026-05-10"
 }
+```
 
-**Validation**
-- userId is required
-- return date cannot be before the borrowing date
-- book must exist
-- book must not already be borrowed
+#### Validation and behavior
+- `userId` is required
+- the book must exist
+- the book must not already be borrowed
+- if a return date is provided, it must be a valid date
+- the return date cannot be earlier than the borrowing date
+- borrowing marks the book as unavailable
+- a `BorrowRequest` document is created with status `approved`
 
-### 3.2 Return a Book
-**Endpoint**
-POST /api/borrow/:requestId/return
-
-**Description**
-Marks a borrowed book as returned and makes it available again.
-
-## Error Responses
-
-### Invalid Email
+#### Success response
+```json
 {
-  "message": "Please enter a valid email address"
+  "message": "Book borrowed successfully!",
+  "borrowRequest": {
+    "_id": "6635b8c1234567890abcd222",
+    "status": "approved"
+  }
 }
+```
 
-### Duplicate Book Title
-{
-  "message": "This book title has already been added to the platform"
-}
+### `POST /api/borrow/:requestId/return`
+Returns a previously borrowed book.
 
-### Already Borrowed
-{
-  "message": "Book already borrowed"
-}
+#### Behavior
+- the borrow request must exist
+- a returned request cannot be returned again
+- the borrow record is marked as `returned`
+- `returnedAt` is stored
+- the related book is marked available again
 
-### Invalid Return Date
-{
-  "message": "Return date cannot be earlier than the borrowing date"
-}
+## Common Error Messages
 
-## Notes
-- Authentication is token-based and simulated for assignment purposes.
-- Role handling is basic and can be extended further.
-- API testing can be done using Postman.
+```json
+{ "message": "Please enter a valid email address" }
+```
+
+```json
+{ "message": "User already exists" }
+```
+
+```json
+{ "message": "Invalid credentials" }
+```
+
+```json
+{ "message": "This book title has already been added to the platform" }
+```
+
+```json
+{ "message": "Book already borrowed" }
+```
+
+```json
+{ "message": "Return date cannot be earlier than the borrowing date" }
+```
+
+## Implementation Notes
+
+- the backend currently uses a hard-coded JWT secret
+- the MongoDB connection string is currently hard-coded in `backend/server.js`
+- authentication tokens are generated on login, but route-level authorization middleware is not yet implemented

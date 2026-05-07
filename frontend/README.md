@@ -1,70 +1,91 @@
-# Getting Started with Create React App
+﻿# Frontend Guide
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This frontend is the React user interface for the Book Sharing Platform. It handles authentication screens, dashboard browsing, admin book entry, profile-based reading, and the help page.
 
-## Available Scripts
+## Start the Frontend
 
-In the project directory, you can run:
+```bash
+npm start
+```
 
-### `npm start`
+The development server runs on `http://localhost:3000`.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Build for Production
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+```bash
+npm run build
+```
 
-### `npm test`
+## Frontend Responsibilities
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+- render the login and registration experience
+- keep session data in local storage
+- fetch books and profile data from the backend API
+- let users search and filter the catalog
+- let users borrow books with a chosen return date
+- let users read borrowed content from the profile screen
+- let users return books
+- let admins or catalog managers add new books
 
-### `npm run build`
+## Main Pages
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### `LoginPage`
+Handles both login and registration. On successful login it stores:
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+- `token`
+- `user`
+- `userId`
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+in local storage.
 
-### `npm run eject`
+### `Dashboard`
+Displays all books, search input, genre filter, and borrow controls.
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+### `AdminPanel`
+Provides the form for adding books with metadata and reading content.
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### `UserProfile`
+Shows borrowed books, reading stats, the reader modal, and return actions.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+### `Help`
+Explains how to use the app step by step.
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## Shared Components
 
-## Learn More
+### `Navbar`
+Visible after login and provides navigation links and logout behavior.
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+### `BookCard`
+A reusable card component included in the codebase. The dashboard currently renders its own card layout directly, so this component is available but not the primary book renderer right now.
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## API Connection
 
-### Code Splitting
+The frontend is currently configured to call the backend at:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+```text
+http://localhost:5000/api
+```
 
-### Analyzing the Bundle Size
+This base URL is defined directly inside the page components that make API requests.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+## Routing Overview
 
-### Making a Progressive Web App
+The main routes are:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+- `/` for login and registration
+- `/dashboard` for catalog browsing
+- `/admin` for adding books
+- `/help` for usage guidance
+- `/profile` for borrowed books and reading
 
-### Advanced Configuration
+If there is no token in local storage, protected pages redirect back to `/`.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+## Styling
 
-### Deployment
+The frontend uses project-level CSS files located in `src/App.css` and `src/index.css`.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+## Notes
 
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+- the app assumes the backend server is already running on port 5000
+- the app assumes MongoDB-backed data is available through the backend
+- the current project uses browser local storage instead of a more advanced auth/session solution

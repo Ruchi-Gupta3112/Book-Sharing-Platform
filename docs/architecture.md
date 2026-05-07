@@ -1,10 +1,18 @@
-# Architecture Documentation
+﻿# Architecture Documentation
 
-## Project Title
-Book Sharing Platform
+## Project Overview
 
-## Problem Statement
-The purpose of this project is to build a full-stack web application that allows users to share, borrow, read, and return books in a simple and user-friendly way. The system helps manage book availability, borrowing records, and user activity through a web interface.
+Book Sharing Platform is a full-stack web application that supports the full borrowing cycle for community-shared books: account creation, login, catalog browsing, borrowing, in-app reading, and returning.
+
+## Architecture Style
+
+The application follows a standard client-server architecture:
+
+1. the React frontend handles page rendering and user interactions
+2. the frontend sends HTTP requests to the Express backend using Axios
+3. the backend applies validation and business rules
+4. Mongoose models persist data in MongoDB
+5. JSON responses are returned to the frontend and rendered in the UI
 
 ## Technology Stack
 
@@ -16,159 +24,116 @@ The purpose of this project is to build a full-stack web application that allows
 
 ### Backend
 - Node.js
-- Express.js
+- Express
+- Mongoose
+- bcrypt
+- jsonwebtoken
+- cors
 
 ### Database
 - MongoDB
-- Mongoose
 
-## High-Level Architecture
-The application follows a client-server architecture:
+## Runtime Structure
 
-1. The React frontend provides the user interface.
-2. The frontend sends HTTP requests to the Express backend.
-3. The backend processes requests, applies validations and business logic, and interacts with MongoDB.
-4. MongoDB stores users, books, and borrow request data.
-5. The backend returns JSON responses to the frontend, which updates the UI.
+### Frontend application
+The frontend is responsible for:
 
-## Main Modules
+- login and registration screens
+- guarded routing based on token presence
+- dashboard book listing, search, and filtering
+- borrow action submission
+- admin-side book creation form
+- profile reading modal and return action
+- help and onboarding content
 
-### 1. Authentication Module
-This module handles:
-- user registration
-- login
-- basic token generation
-- storing user session data in local storage
+### Backend application
+The backend is responsible for:
 
-### 2. Book Management Module
-This module handles:
-- listing all books
-- adding books from admin panel
-- preventing duplicate titles
-- storing additional details like description, reading content, and reading URL
+- connecting to MongoDB
+- exposing REST endpoints under `/api`
+- validating request data
+- hashing passwords
+- generating JWT tokens for login
+- managing book availability and borrow records
 
-### 3. Borrowing Module
-This module handles:
-- borrowing books
-- validating return dates
-- marking books as unavailable after borrowing
-- returning books and making them available again
+## Core Modules
 
-### 4. User Profile Module
-This module handles:
-- showing borrowed books for the logged-in user
-- opening reading content
-- tracking reading-related stats
-- returning borrowed books
+### Authentication module
+- implemented in `backend/routes/userRoutes.js`
+- handles registration and login
+- stores passwords in hashed form
+- returns token plus user metadata on login
 
-### 5. Help and Guidance Module
-This module provides:
-- onboarding information
-- user instructions
-- app usage guidance for first-time users
+### Catalog module
+- implemented mainly through `backend/routes/bookRoutes.js`
+- lists all books
+- adds new books with validation against duplicate titles
 
-## Data Flow
+### Borrowing module
+- implemented in `backend/routes/borrowRoutes.js`
+- creates borrow records
+- checks return date validity
+- updates book availability when borrowed or returned
 
-### Borrow Book Flow
-1. User logs in.
-2. User opens the dashboard.
-3. Frontend fetches available books from backend.
-4. User selects a return date and clicks borrow.
-5. Frontend sends borrow request to backend.
-6. Backend validates and creates a borrow request.
-7. Backend updates book status to borrowed.
-8. Frontend refreshes the book list and profile data.
+### Profile module
+- supported by `backend/routes/userRoutes.js` and `frontend/src/pages/UserProfile.js`
+- fetches profile summary and current borrowed books
+- calculates active borrow, readable, and overdue counts
 
-### Read Book Flow
-1. User opens My Profile.
-2. Frontend fetches borrowed books from backend.
-3. User clicks Read now.
-4. Stored reading content or reading URL is shown.
+### Help module
+- implemented in `frontend/src/pages/Help.js`
+- provides onboarding and feature guidance for end users
 
-### Return Book Flow
-1. User opens My Profile.
-2. User clicks Return book.
-3. Frontend sends return request to backend.
-4. Backend marks borrow request as returned.
-5. Backend updates book status to available again.
+## Request Flow Example
 
-## Backend Structure
-### Models
-- User
-- Book
-- BorrowRequest
+### Borrow flow
+1. the user logs in from the frontend
+2. the dashboard fetches books from `GET /api/books`
+3. the user selects a return date and clicks borrow
+4. the frontend sends `POST /api/borrow/:bookId`
+5. the backend validates the request and creates a borrow record
+6. the book is marked unavailable
+7. the frontend refreshes the list
 
-### Routes
-- userRoutes.js
-- bookRoutes.js
-- borrowRoutes.js
+### Return flow
+1. the user opens the profile page
+2. the frontend fetches profile data from `GET /api/users/:userId/profile`
+3. the user clicks return
+4. the frontend sends `POST /api/borrow/:requestId/return`
+5. the backend marks the record returned and makes the book available again
+6. the frontend reloads the profile state
 
-### Server
-- server.js initializes Express, middleware, database connection, and route mounting
+## Data Ownership
 
-## Frontend Structure
-### Pages
-- LoginPage
-- Dashboard
-- UserProfile
-- AdminPanel
-- Help
+### Frontend state
+- session token and user details are stored in local storage
+- page components manage their own UI state with React hooks
+- dashboard stores current search, filter, loading state, and borrow-date inputs
+- profile stores selected reading item and summary stats
 
-### Components
-- Navbar
-- BookCard
+### Backend state
+- persistent data is stored in MongoDB collections
+- book availability is derived from and synchronized with borrow actions
 
-### Main App
-- App.js handles routes and navigation behavior
+## Current Design Decisions
 
-## Database Entities
+- the app uses local storage for session persistence instead of server-side sessions
+- the backend exposes simple REST endpoints rather than GraphQL or RPC-style APIs
+- duplicate book titles are blocked at the application level for a cleaner catalog
+- reading content can be stored directly on the book document to keep the demo flow simple
+- route guarding in the frontend is based on token presence, not token verification
 
-### User
-Stores:
-- name
-- email
-- password
-- role
+## Constraints and Tradeoffs
 
-### Book
-Stores:
-- title
-- author
-- genre
-- description
-- ownerName
-- language
-- pageCount
-- publishedYear
-- readContent
-- readUrl
-- availability status
+- the JWT secret and MongoDB connection string are currently hard-coded
+- authorization middleware is not yet enforced on protected backend routes
+- the admin panel is available in the UI, but role-based backend restriction is not implemented yet
+- the borrow workflow assumes a single active borrower per book using the `isBorrowed` flag
 
-### BorrowRequest
-Stores:
-- borrowed book reference
-- borrower reference
-- borrow date
-- return date
-- due date
-- status
-- returnedAt
+## Suggested Next Improvements
 
-## Design Decisions
-- React was used because it supports component-based UI and routing well.
-- Express was used because it is lightweight and easy to build REST APIs with.
-- MongoDB was chosen because the project data is document-based and flexible.
-- Token-based login was simulated to keep the assignment practical and focused.
-- Reading content was stored as text to make the profile reading feature easy to demonstrate.
-
-## Possible Future Improvements
-- role-based authorization middleware
-- edit/delete books
-- book cover image upload
-- search by multiple filters on backend
-- notification system for due dates
-- admin approval flow for borrow requests
-- deployment on cloud platforms
-
-## Conclusion
-The Book Sharing Platform is a complete full-stack application that demonstrates frontend-backend integration, database persistence, user authentication, borrowing logic, and user-focused UI design.
+- move environment-specific values to `.env`
+- add backend auth middleware and role checks
+- add server-side validation for more fields
+- add automated tests
+- separate configuration, controllers, and middleware into dedicated folders as the app grows
