@@ -130,10 +130,3 @@ The backend is responsible for:
 - the admin panel is available in the UI, but role-based backend restriction is not implemented yet
 - the borrow workflow assumes a single active borrower per book using the `isBorrowed` flag
 
-## Suggested Next Improvements
-
-- move environment-specific values to `.env`
-- add backend auth middleware and role checks
-- add server-side validation for more fields
-- add automated tests
-- separate configuration, controllers, and middleware into dedicated folders as the app grows
