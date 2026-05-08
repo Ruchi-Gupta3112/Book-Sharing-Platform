@@ -10,12 +10,6 @@ npm start
 
 The development server runs on `http://localhost:3000`.
 
-## Build for Production
-
-```bash
-npm run build
-```
-
 ## Frontend Responsibilities
 
 - render the login and registration experience
