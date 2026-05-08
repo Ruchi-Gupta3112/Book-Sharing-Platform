@@ -13,7 +13,6 @@ AI was used to assist in:
 - fixing validation and backend logic issues
 - improving help/documentation content
 - suggesting better project organization
-- preparing documentation outlines
 
 ## AI-Assisted Tasks Log
 
@@ -79,13 +78,8 @@ Make the help page easier for first-time users.
 - suggested a more detailed onboarding-style help page
 - added step-by-step usage guidance and quick-start notes
 
-**How AI Helped**
-- suggested structure for API documentation
-- suggested architecture documentation sections
-
 ## Example Prompts Used
 - "Whenever user clicks on borrow book it should be visible in the user profile section and with every book there should be a read option."
-- "Make it a proper book sharing platform."
 - "The return date should be enabled from the date of borrowing, not before that."
 - "Make the help section more detailed so it becomes easy for anyone to use the app."
 - "If a book title is already added and another person tries to add it, it should throw an error."
