@@ -114,8 +114,14 @@ Returns a richer profile payload for the given user.
 ### `GET /api/books`
 Returns all books sorted by newest first.
 
+Each returned book now includes inventory fields such as:
+- `totalCopies`
+- `availableCopies`
+- `available`
+- `isBorrowed`
+
 ### `POST /api/books`
-Adds a new book to the shared library.
+Adds a new book to the shared library or increases the copy count of an existing title.
 
 #### Example request body
 ```json
@@ -126,6 +132,7 @@ Adds a new book to the shared library.
   "description": "A practical guide to building better habits.",
   "ownerName": "Community Shelf",
   "language": "English",
+  "copyCount": 3,
   "pageCount": 320,
   "publishedYear": 2018,
   "readUrl": "",
@@ -136,7 +143,8 @@ Adds a new book to the shared library.
 #### Validation
 - `title` is required
 - the title is trimmed before saving
-- duplicate titles are blocked with a case-insensitive exact-match check
+- `copyCount` defaults to `1` when not provided
+- if the same title already exists, the backend increases `totalCopies` and `availableCopies` instead of creating a separate duplicate record
 
 ## Borrow Endpoints
 
@@ -154,10 +162,11 @@ Borrows an available book for a user.
 #### Validation and behavior
 - `userId` is required
 - the book must exist
-- the book must not already be borrowed
+- the book must have at least one available copy
 - if a return date is provided, it must be a valid date
 - the return date cannot be earlier than the borrowing date
-- borrowing marks the book as unavailable
+- borrowing decreases `availableCopies` by `1`
+- the book becomes fully unavailable only when `availableCopies` reaches `0`
 - a `BorrowRequest` document is created with status `approved`
 
 #### Success response
@@ -179,7 +188,7 @@ Returns a previously borrowed book.
 - a returned request cannot be returned again
 - the borrow record is marked as `returned`
 - `returnedAt` is stored
-- the related book is marked available again
+- the related book gains one available copy again, up to `totalCopies`
 
 ## Common Error Messages
 
@@ -196,11 +205,7 @@ Returns a previously borrowed book.
 ```
 
 ```json
-{ "message": "This book title has already been added to the platform" }
-```
-
-```json
-{ "message": "Book already borrowed" }
+{ "message": "No copies are currently available" }
 ```
 
 ```json
@@ -212,3 +217,4 @@ Returns a previously borrowed book.
 - the backend currently uses a hard-coded JWT secret
 - the MongoDB connection string is currently hard-coded in `backend/server.js`
 - authentication tokens are generated on login, but route-level authorization middleware is not yet implemented
+- inventory updates are handled at the application layer rather than through a separate stock ledger

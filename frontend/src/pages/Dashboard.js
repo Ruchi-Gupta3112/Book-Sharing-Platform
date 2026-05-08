@@ -11,6 +11,28 @@ function Dashboard({ user }) {
   const [loading, setLoading] = useState(true);
   const today = new Date().toISOString().split("T")[0];
 
+  const getTotalCopies = (book) => {
+    const parsedTotalCopies = Number(book.totalCopies);
+    return Number.isFinite(parsedTotalCopies) && parsedTotalCopies > 0
+      ? parsedTotalCopies
+      : 1;
+  };
+
+  const getAvailableCopies = (book) => {
+    const totalCopies = getTotalCopies(book);
+    const parsedAvailableCopies = Number(book.availableCopies);
+
+    return Math.min(
+      Math.max(
+        Number.isFinite(parsedAvailableCopies)
+          ? parsedAvailableCopies
+          : totalCopies,
+        0,
+      ),
+      totalCopies,
+    );
+  };
+
   const loadBooks = async () => {
     try {
       setLoading(true);
@@ -92,12 +114,16 @@ function Dashboard({ user }) {
 
         <div className="stats-strip">
           <div className="stat-card">
-            <strong>{books.length}</strong>
-            <span>Total books</span>
+            <strong>
+              {books.reduce((sum, book) => sum + getTotalCopies(book), 0)}
+            </strong>
+            <span>Total copies</span>
           </div>
           <div className="stat-card">
-            <strong>{books.filter((book) => !book.isBorrowed).length}</strong>
-            <span>Available now</span>
+            <strong>
+              {books.reduce((sum, book) => sum + getAvailableCopies(book), 0)}
+            </strong>
+            <span>Copies available now</span>
           </div>
           <div className="stat-card">
             <strong>
@@ -143,9 +169,9 @@ function Dashboard({ user }) {
           <div key={book._id} className="book-card">
             <div className="book-card-top">
               <span
-                className={`status-pill ${book.isBorrowed ? "status-pill-borrowed" : ""}`}
+                className={`status-pill ${getAvailableCopies(book) === 0 ? "status-pill-borrowed" : ""}`}
               >
-                {book.isBorrowed ? "Borrowed" : "Available"}
+                {getAvailableCopies(book) === 0 ? "Unavailable" : "Available"}
               </span>
               <span className="genre-pill">{book.genre}</span>
             </div>
@@ -163,6 +189,9 @@ function Dashboard({ user }) {
                 {book.pageCount ? `${book.pageCount} pages` : "Open length"}
               </span>
               <span>{book.language || "English"}</span>
+              <span>
+                {getAvailableCopies(book)} of {getTotalCopies(book)} copies available
+              </span>
             </div>
 
             <label className="date-label" htmlFor={`return-date-${book._id}`}>
@@ -174,13 +203,13 @@ function Dashboard({ user }) {
               min={today}
               value={borrowSelections[book._id] || ""}
               onChange={(e) => handleSelectionChange(book._id, e.target.value)}
-              disabled={book.isBorrowed}
+              disabled={getAvailableCopies(book) === 0}
             />
             <button
               onClick={() => handleBorrow(book._id)}
-              disabled={book.isBorrowed}
+              disabled={getAvailableCopies(book) === 0}
             >
-              {book.isBorrowed ? "Currently borrowed" : "Borrow book"}
+              {getAvailableCopies(book) === 0 ? "No copies left" : "Borrow book"}
             </button>
           </div>
         ))}

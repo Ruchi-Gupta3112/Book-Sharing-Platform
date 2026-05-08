@@ -39,13 +39,15 @@ Defined in `backend/models/Book.js`.
 
 | Field | Type | Required | Notes |
 | --- | --- | --- | --- |
-| `title` | String | Yes | Trimmed, checked for duplicate titles |
+| `title` | String | Yes | Trimmed, used to merge same-title entries into one inventory record |
 | `author` | String | Yes | Trimmed |
 | `genre` | String | No | Defaults to `General` |
 | `description` | String | No | Defaults to empty string |
 | `ownerId` | ObjectId | No | Reference to `User` |
 | `ownerName` | String | No | Defaults to `Community Member` |
 | `language` | String | No | Defaults to `English` |
+| `totalCopies` | Number | No | Total number of copies held for this title |
+| `availableCopies` | Number | No | Number of copies currently available to borrow |
 | `pageCount` | Number | No | Defaults to `0` |
 | `publishedYear` | Number | No | Optional |
 | `coverImage` | String | No | Optional image URL/path |
@@ -95,14 +97,16 @@ User
 
 ## Business Rules Reflected in the Schema
 
-- only one active borrower is expected per book at a time
-- a borrowed book is marked using `isBorrowed = true` and `available = false`
-- a returned book flips those fields back to available values
+- one title can have multiple copies
+- borrowing one copy decreases `availableCopies` by `1`
+- returning one copy increases `availableCopies` by `1`
+- a title is fully unavailable only when `availableCopies = 0`
+- `isBorrowed` and `available` are synchronized from copy counts for UI convenience
 - borrowed-book history is stored in `BorrowRequest`
 - profile statistics are computed from borrow records rather than stored separately
 
 ## Notes
 
-- duplicate book prevention is handled in route logic, not by a unique MongoDB index on `title`
+- same-title inventory merging is handled in route logic, not by a unique MongoDB index on `title`
 - authorization rules are not enforced at the schema level
 - the database schema is intentionally simple for local project/demo use

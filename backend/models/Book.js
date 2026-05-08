@@ -18,6 +18,8 @@ const bookSchema = new mongoose.Schema(
       default:
         "This title is available to borrow right now. Add full reading content from the admin panel so borrowers can read it inside their profile.",
     },
+    totalCopies: { type: Number, default: 1, min: 1 },
+    availableCopies: { type: Number, default: 1, min: 0 },
     isBorrowed: { type: Boolean, default: false },
     available: { type: Boolean, default: true },
   },

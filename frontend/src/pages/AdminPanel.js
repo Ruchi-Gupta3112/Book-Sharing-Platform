@@ -10,6 +10,7 @@ const initialForm = {
   description: "",
   ownerName: "",
   language: "English",
+  copyCount: "1",
   pageCount: "",
   publishedYear: "",
   readUrl: "",
@@ -29,6 +30,7 @@ function AdminPanel({ user }) {
       await axios.post(`${API_BASE_URL}/books`, {
         ...form,
         ownerName: form.ownerName || user?.name || "Community Member",
+        copyCount: Math.max(Number(form.copyCount) || 1, 1),
         pageCount: Number(form.pageCount) || 0,
         publishedYear: Number(form.publishedYear) || undefined,
       });
@@ -87,6 +89,14 @@ function AdminPanel({ user }) {
           name="language"
           placeholder="Language"
           value={form.language}
+          onChange={handleChange}
+        />
+        <input
+          type="number"
+          name="copyCount"
+          min="1"
+          placeholder="Number of copies"
+          value={form.copyCount}
           onChange={handleChange}
         />
         <input

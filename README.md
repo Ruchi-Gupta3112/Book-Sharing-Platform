@@ -6,11 +6,11 @@ A full-stack web application for sharing, borrowing, reading, and returning book
 
 - lets new users register and existing users log in
 - shows a searchable shared library of books
-- allows a user to borrow a book with a selected return date
+- shows copy counts for each title and lets users borrow one available copy with a selected return date
 - tracks borrowed books inside the user profile
 - lets the borrower read in-app content or open an external reading link
 - allows books to be returned so they become available again
-- includes an admin-style page for adding books and reading content
+- includes an admin-style page for adding books, extra copies, and reading content
 - includes a help page for first-time users
 
 ## Tech Stack
@@ -54,13 +54,13 @@ book-sharing-platform/
 Users can create an account from the landing screen or log in with an existing account. Successful login stores the token, user object, and user id in local storage so the UI can keep the session active.
 
 ### 2. Browse and Borrow
-The dashboard fetches all books from the backend, supports search and genre filtering, and allows borrowing an available title after selecting a return date.
+The dashboard fetches all books from the backend, supports search and genre filtering, shows how many copies are available for each title, and allows borrowing one available copy after selecting a return date.
 
 ### 3. Read in Profile
 Borrowed books appear in the user profile. From there, the user can open the reading modal, read the stored content, follow an external reading link if present, or return the book.
 
 ### 4. Add Books
-The admin panel allows new books to be added with richer metadata such as description, owner name, language, page count, published year, reading link, and in-app reading content.
+The admin panel allows new books to be added with richer metadata such as description, owner name, language, copy count, page count, published year, reading link, and in-app reading content. If the same title is added again, the system increases the copy count instead of creating a duplicate listing.
 
 ## Prerequisites
 
@@ -133,9 +133,9 @@ More detail is available in [docs/API.md](docs/API.md).
 ## Key Notes About the Current Implementation
 
 - email addresses are normalized to lowercase during registration and login
-- duplicate book titles are blocked with a case-insensitive check
+- same-title book entries are merged into one catalog record with copy counts
 - return dates cannot be earlier than the borrowing date
-- book availability is updated when a book is borrowed or returned
+- available copy counts are updated when a book is borrowed or returned
 - borrowed books remain visible in the profile until they are returned
 - the current project stores the MongoDB connection string and JWT secret directly in code
 

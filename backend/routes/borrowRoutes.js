@@ -19,8 +19,39 @@ router.post("/:bookId", async (req, res) => {
       return res.status(404).json({ message: "Book not found" });
     }
 
-    if (book.isBorrowed) {
-      return res.status(400).json({ message: "Book already borrowed" });
+    const activeBorrowsForTitle = await BorrowRequest.find({
+      bookId: book._id,
+      status: { $ne: "returned" },
+    }).select("borrowerId");
+
+    const existingActiveBorrow = activeBorrowsForTitle.find(
+      (borrow) => String(borrow.borrowerId) === String(userId),
+    );
+
+    if (existingActiveBorrow) {
+      return res.status(400).json({
+        message: "You have already borrowed this title and must return it before borrowing another copy",
+      });
+    }
+
+    const parsedTotalCopies = Number(book.totalCopies);
+    const totalCopies =
+      Number.isFinite(parsedTotalCopies) && parsedTotalCopies > 0
+        ? parsedTotalCopies
+        : 1;
+    const parsedAvailableCopies = Number(book.availableCopies);
+    const availableCopies = Math.min(
+      Math.max(
+        Number.isFinite(parsedAvailableCopies)
+          ? parsedAvailableCopies
+          : totalCopies,
+        0,
+      ),
+      totalCopies,
+    );
+
+    if (availableCopies <= 0) {
+      return res.status(400).json({ message: "No copies are currently available" });
     }
     if (returnDate) {
       const selectedReturnDate = new Date(returnDate);
@@ -40,8 +71,10 @@ router.post("/:bookId", async (req, res) => {
       }
     }
 
-    book.isBorrowed = true;
-    book.available = false;
+    book.totalCopies = totalCopies;
+    book.availableCopies = Math.max(availableCopies - 1, 0);
+    book.isBorrowed = book.availableCopies === 0;
+    book.available = book.availableCopies > 0;
     await book.save();
 
     const borrowRequest = new BorrowRequest({
@@ -89,8 +122,29 @@ router.post("/:requestId/return", async (req, res) => {
     await borrowRequest.save();
 
     if (borrowRequest.bookId) {
-      borrowRequest.bookId.isBorrowed = false;
-      borrowRequest.bookId.available = true;
+      const parsedReturnTotalCopies = Number(borrowRequest.bookId.totalCopies);
+      const totalCopies =
+        Number.isFinite(parsedReturnTotalCopies) && parsedReturnTotalCopies > 0
+          ? parsedReturnTotalCopies
+          : 1;
+      const parsedCurrentAvailableCopies = Number(
+        borrowRequest.bookId.availableCopies,
+      );
+      const currentAvailableCopies = Math.min(
+        Math.max(
+          Number.isFinite(parsedCurrentAvailableCopies)
+            ? parsedCurrentAvailableCopies
+            : 0,
+          0,
+        ),
+        totalCopies,
+      );
+      borrowRequest.bookId.availableCopies = Math.min(
+        currentAvailableCopies + 1,
+        totalCopies,
+      );
+      borrowRequest.bookId.isBorrowed = borrowRequest.bookId.availableCopies === 0;
+      borrowRequest.bookId.available = borrowRequest.bookId.availableCopies > 0;
       await borrowRequest.bookId.save();
     }
 

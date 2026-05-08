@@ -6,22 +6,24 @@
 - the backend runs on port `5000`
 - the frontend runs on port `3000`
 - frontend and backend are started separately
+- existing older book records may be normalized on read to add missing inventory fields
 
 ## Functional Assumptions
 
 - any registered user can log in and use the dashboard
 - books are borrowed immediately after the borrow request is submitted
-- each book can have only one active borrower at a time
-- a returned book becomes available immediately
+- each title can have multiple copies
+- each borrow action reduces available inventory by one copy
+- a returned copy becomes available immediately
 - reading content is either stored directly in the book record or opened through an external link
-- duplicate titles should be prevented even if users type different letter casing
+- adding the same title again should increase the copy count instead of creating a separate duplicate entry
 
 ## UX Assumptions
 
 - the dashboard is the main landing page after login
 - the profile page is the central place for reading and returning borrowed books
 - the help page should be enough for a first-time user to understand the workflow
-- the admin panel is used to enrich the catalog with readable content and metadata
+- the admin panel is used to enrich the catalog with readable content, metadata, and copy counts
 
 ## Security and Auth Assumptions
 
